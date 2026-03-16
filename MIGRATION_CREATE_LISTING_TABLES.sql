@@ -169,7 +169,55 @@ CREATE POLICY "Users can delete own event listings"
 
 ---
 
--- 4. BOOKING TRACKING TABLE (Optional but recommended)
+-- 4. SME LISTINGS TABLE
+CREATE TABLE IF NOT EXISTS public.sme_listings (
+  id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  business_name text NOT NULL,
+  category text CHECK (category IN ('retail', 'services', 'manufacturing', 'trading', 'hospitality', 'technology', 'other')),
+  description text,
+  location text,
+  service_type text CHECK (service_type IN ('products', 'services', 'both')) DEFAULT 'both',
+  contact_phone text,
+  website text,
+  rating numeric(3,1) DEFAULT 4.5,
+  status text DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'paused')),
+  created_at timestamp DEFAULT now(),
+  updated_at timestamp DEFAULT now()
+);
+
+-- Create indexes for sme_listings
+CREATE INDEX idx_sme_listings_user_id ON public.sme_listings(user_id);
+CREATE INDEX idx_sme_listings_created_at ON public.sme_listings(created_at DESC);
+CREATE INDEX idx_sme_listings_location ON public.sme_listings(location);
+CREATE INDEX idx_sme_listings_category ON public.sme_listings(category);
+
+-- Enable RLS for sme_listings
+ALTER TABLE public.sme_listings ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can only see their own listings (unless public)
+CREATE POLICY "Users can read own sme listings"
+  ON public.sme_listings FOR SELECT
+  USING (auth.uid() = user_id OR status = 'active');
+
+-- Policy: Users can insert their own sme listings
+CREATE POLICY "Users can create own sme listings"
+  ON public.sme_listings FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Policy: Users can update their own sme listings
+CREATE POLICY "Users can update own sme listings"
+  ON public.sme_listings FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Policy: Users can delete their own sme listings
+CREATE POLICY "Users can delete own sme listings"
+  ON public.sme_listings FOR DELETE
+  USING (auth.uid() = user_id);
+
+---
+
+-- 5. BOOKING TRACKING TABLE (Optional but recommended)
 CREATE TABLE IF NOT EXISTS public.bookings (
   id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id uuid REFERENCES auth.users(id) NOT NULL,
@@ -204,7 +252,7 @@ Create POLICY "Users can create bookings"
 
 ---
 
--- 5. RATINGS & REVIEWS FOR LISTINGS (Extension)
+-- 6. RATINGS & REVIEWS FOR LISTINGS (Extension)
 CREATE TABLE IF NOT EXISTS public.listing_reviews (
   id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
   listing_id text NOT NULL,
@@ -235,7 +283,7 @@ CREATE POLICY "Authenticated users can create reviews"
 
 ---
 
--- 6. Add role check to allow only authorized users to create listings
+-- 7. Add role check to allow only authorized users to create listings
 CREATE OR REPLACE FUNCTION check_listing_permission()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -261,7 +309,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 ---
 
--- 7. Storage bucket for listing images (Supabase Storage)
+-- 8. Storage bucket for listing images (Supabase Storage)
 -- Go to Storage in Supabase dashboard and create these buckets:
 -- - listing-images (for stay, vehicle, event images)
 -- - Set to public for image serving

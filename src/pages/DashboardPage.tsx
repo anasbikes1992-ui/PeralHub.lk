@@ -7,6 +7,13 @@ import RateManagement from "@/components/RateManagement";
 import LankaPayModal from "@/components/LankaPayModal";
 import ImageUpload from "@/components/ImageUpload";
 import ProviderConfigDashboard from "@/components/ProviderConfigDashboard";
+import StayManagement from "@/components/StayManagement";
+import VehicleManagement from "@/components/VehicleManagement";
+import EventManagement from "@/components/EventManagement";
+import SMEManagement from "@/components/SMEManagement";
+import AdminUserManagement from "@/components/AdminUserManagement";
+import AdminListingManagement from "@/components/AdminListingManagement";
+import AdminAnalyticsDashboard from "@/components/AdminAnalyticsDashboard";
 
 const DashboardPage = () => {
   const { data, currentUser, showToast } = useAppContext();
@@ -316,15 +323,15 @@ const DashboardPage = () => {
           </div>
         )}
 
-        {activeSection === "listings" && (
+        {activeSection === "listings" && currentUser === "stay_provider" && <StayManagement />}
+        {activeSection === "listings" && currentUser === "vehicle_provider" && <VehicleManagement />}
+        {activeSection === "listings" && currentUser === "event_organizer" && <EventManagement />}
+        {activeSection === "listings" && currentUser === "sme" && <SMEManagement />}
+        
+        {activeSection === "listings" && (currentUser === "owner" || currentUser === "broker") && (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl">My {currentUser === "stay_provider" ? "Stays" : currentUser === "vehicle_provider" ? "Vehicles" : currentUser === "event_organizer" ? "Events" : "Listings"}</h2>
-              <button 
-                onClick={() => showToast("Feature coming soon - listing creation interface in development", "info")} 
-                className="bg-primary hover:bg-gold-light text-primary-foreground px-5 py-2.5 rounded-lg font-bold text-sm">
-                ➕ Add New
-              </button>
+              <h2 className="text-2xl">My Listings</h2>
             </div>
             <div className="bg-card rounded-xl overflow-hidden border border-border">
               <div className="overflow-x-auto">
@@ -346,6 +353,11 @@ const DashboardPage = () => {
             </div>
           </div>
         )}
+
+        {/* Admin Sections */}
+        {activeSection === "analytics" && currentUser === "admin" && <AdminAnalyticsDashboard />}
+        {activeSection === "all_listings" && currentUser === "admin" && <AdminListingManagement />}
+        {activeSection === "users" && currentUser === "admin" && <AdminUserManagement />}
 
         {activeSection === "transactions" && (
           <div>
