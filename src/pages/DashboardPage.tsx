@@ -7,6 +7,9 @@ import RateManagement from "@/components/RateManagement";
 import LankaPayModal from "@/components/LankaPayModal";
 import ImageUpload from "@/components/ImageUpload";
 import ProviderConfigDashboard from "@/components/ProviderConfigDashboard";
+import ListStayModal from "@/components/ListStayModal";
+import ListVehicleModal from "@/components/ListVehicleModal";
+import ListEventModal from "@/components/ListEventModal";
 
 const DashboardPage = () => {
   const { data, currentUser, showToast } = useAppContext();
@@ -15,6 +18,11 @@ const DashboardPage = () => {
   const mockUser = data.users[currentUser];
   const displayName = profile?.full_name || mockUser.name;
   const displayEmail = profile?.email || mockUser.email;
+
+  // Modal states for listing management
+  const [showStayModal, setShowStayModal] = useState(false);
+  const [showVehicleModal, setShowVehicleModal] = useState(false);
+  const [showEventModal, setShowEventModal] = useState(false);
 
   const roleColorMap: Record<string, string> = { customer: "bg-emerald", owner: "bg-sapphire", broker: "bg-primary", admin: "bg-ruby", stay_provider: "bg-teal", vehicle_provider: "bg-ruby", event_organizer: "bg-indigo", sme: "bg-primary" };
   const roleColor = roleColorMap[currentUser] || "bg-primary";
@@ -310,11 +318,23 @@ const DashboardPage = () => {
 
         {activeSection === "listings" && (
           <div>
-            <div className="flex justify-between items-center mb-6"><h2 className="text-2xl">My Listings</h2><button onClick={() => showToast("Opening listing form…", "info")} className="bg-primary hover:bg-gold-light text-primary-foreground px-5 py-2.5 rounded-lg font-bold text-sm">➕ Add New</button></div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl">My {currentUser === "stay_provider" ? "Stays" : currentUser === "vehicle_provider" ? "Vehicles" : currentUser === "event_organizer" ? "Events" : "Listings"}</h2>
+              <button 
+                onClick={() => {
+                  if (currentUser === "stay_provider") setShowStayModal(true);
+                  else if (currentUser === "vehicle_provider") setShowVehicleModal(true);
+                  else if (currentUser === "event_organizer") setShowEventModal(true);
+                  else showToast("Opening listing form…", "info");
+                }} 
+                className="bg-primary hover:bg-gold-light text-primary-foreground px-5 py-2.5 rounded-lg font-bold text-sm">
+                ➕ Add New
+              </button>
+            </div>
             <div className="bg-card rounded-xl overflow-hidden border border-border">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead><tr className="border-b border-border"><th className="p-3 text-left text-xs uppercase text-muted-foreground font-semibold">Property</th><th className="p-3 text-left text-xs uppercase text-muted-foreground font-semibold">Type</th><th className="p-3 text-left text-xs uppercase text-muted-foreground font-semibold">Price</th><th className="p-3 text-left text-xs uppercase text-muted-foreground font-semibold">Views</th><th className="p-3 text-left text-xs uppercase text-muted-foreground font-semibold">Status</th></tr></thead>
+                  <thead><tr className="border-b border-border"><th className="p-3 text-left text-xs uppercase text-muted-foreground font-semibold">Item</th><th className="p-3 text-left text-xs uppercase text-muted-foreground font-semibold">Type</th><th className="p-3 text-left text-xs uppercase text-muted-foreground font-semibold">Price</th><th className="p-3 text-left text-xs uppercase text-muted-foreground font-semibold">Views</th><th className="p-3 text-left text-xs uppercase text-muted-foreground font-semibold">Status</th></tr></thead>
                   <tbody>
                     {data.properties.filter(p => currentUser === "admin" ? true : p.owner === currentUser).map(p => (
                       <tr key={p.id} className="border-b border-border hover:bg-background">
@@ -694,6 +714,11 @@ const DashboardPage = () => {
       </div>
 
       <LankaPayModal open={showPayment} onClose={() => setShowPayment(false)} amount={paymentCtx.amount} description={paymentCtx.description} onSuccess={paymentCtx.onSuccess} />
+      
+      {/* Listing Modals */}
+      <ListStayModal open={showStayModal} onOpenChange={setShowStayModal} />
+      <ListVehicleModal open={showVehicleModal} onOpenChange={setShowVehicleModal} />
+      <ListEventModal open={showEventModal} onOpenChange={setShowEventModal} />
     </div>
   );
 };
@@ -717,20 +742,39 @@ const FeeCard = ({ icon, category, rate, basis }: { icon: string; category: stri
 const EnquiriesSection = ({ userId }: { userId?: string }) => {
   const [enquiries, setEnquiries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) { setLoading(false); return; }
     const fetchEnquiries = async () => {
-      const { data } = await supabase.from("inquiries").select("*").eq("owner_id", userId).order("created_at", { ascending: false });
-      setEnquiries(data || []);
-      setLoading(false);
+      try {
+        const { data, error: err } = await supabase.from("inquiries").select("*").eq("owner_id", userId).order("created_at", { ascending: false });
+        if (err) {
+          console.error("Error fetching enquiries:", err);
+          setError("Could not load enquiries");
+          setEnquiries([]);
+        } else {
+          setEnquiries(data || []);
+          setError(null);
+        }
+      } catch (err) {
+        console.error("Enquiries fetch error:", err);
+        setError("Error loading enquiries");
+        setEnquiries([]);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchEnquiries();
   }, [userId]);
 
   const markRead = async (id: string) => {
-    await supabase.from("inquiries").update({ status: "read" }).eq("id", id);
-    setEnquiries(prev => prev.map(e => e.id === id ? { ...e, status: "read" } : e));
+    try {
+      await supabase.from("inquiries").update({ status: "read" }).eq("id", id);
+      setEnquiries(prev => prev.map(e => e.id === id ? { ...e, status: "read" } : e));
+    } catch (err) {
+      console.error("Error marking enquiry as read:", err);
+    }
   };
 
   const typeIcons: Record<string, string> = { property: "🏠", stay: "🏨", vehicle: "🚗", event: "🎭" };
@@ -740,6 +784,12 @@ const EnquiriesSection = ({ userId }: { userId?: string }) => {
       <h2 className="text-2xl mb-6">📩 Enquiries</h2>
       {loading ? (
         <p className="text-muted-foreground">Loading enquiries…</p>
+      ) : error ? (
+        <div className="text-center py-16 text-muted-foreground">
+          <div className="text-5xl mb-3">⚠️</div>
+          <h3>{error}</h3>
+          <p className="mt-2">Please refresh the page or try again.</p>
+        </div>
       ) : enquiries.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <div className="text-5xl mb-3">📩</div>
@@ -759,7 +809,7 @@ const EnquiriesSection = ({ userId }: { userId?: string }) => {
                     <span className="text-[11px] text-muted-foreground ml-auto">{new Date(e.created_at).toLocaleDateString()}</span>
                   </div>
                   <div className="text-[13px] text-muted-foreground mb-1">📧 {e.sender_email} {e.sender_phone && `• 📱 ${e.sender_phone}`}</div>
-                  <div className="text-xs text-muted-foreground mb-1 capitalize">🏷️ {e.listing_type} • ID: {e.listing_id}</div>
+                  <div className="text-[11px] text-muted-foreground mb-1 capitalize">🏷️ {e.listing_type} • ID: {e.listing_id}</div>
                   {e.message && <p className="text-sm bg-background rounded-lg p-2.5 mt-2">{e.message}</p>}
                 </div>
                 {e.status === "new" && (
