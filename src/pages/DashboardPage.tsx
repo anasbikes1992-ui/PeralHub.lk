@@ -7,9 +7,6 @@ import RateManagement from "@/components/RateManagement";
 import LankaPayModal from "@/components/LankaPayModal";
 import ImageUpload from "@/components/ImageUpload";
 import ProviderConfigDashboard from "@/components/ProviderConfigDashboard";
-import ListStayModal from "@/components/ListStayModal";
-import ListVehicleModal from "@/components/ListVehicleModal";
-import ListEventModal from "@/components/ListEventModal";
 
 const DashboardPage = () => {
   const { data, currentUser, showToast } = useAppContext();
@@ -18,11 +15,6 @@ const DashboardPage = () => {
   const mockUser = data.users[currentUser];
   const displayName = profile?.full_name || mockUser.name;
   const displayEmail = profile?.email || mockUser.email;
-
-  // Modal states for listing management
-  const [showStayModal, setShowStayModal] = useState(false);
-  const [showVehicleModal, setShowVehicleModal] = useState(false);
-  const [showEventModal, setShowEventModal] = useState(false);
 
   const roleColorMap: Record<string, string> = { customer: "bg-emerald", owner: "bg-sapphire", broker: "bg-primary", admin: "bg-ruby", stay_provider: "bg-teal", vehicle_provider: "bg-ruby", event_organizer: "bg-indigo", sme: "bg-primary" };
   const roleColor = roleColorMap[currentUser] || "bg-primary";
@@ -226,8 +218,16 @@ const DashboardPage = () => {
 
         {activeSection === "analytics" && currentUser !== "customer" && <AnalyticsDashboard />}
 
-        {activeSection === "enquiries" && (currentUser === "owner" || currentUser === "broker" || currentUser === "stay_provider" || currentUser === "event_organizer" || currentUser === "sme") && (
-          <EnquiriesSection userId={user?.id} />
+        {activeSection === "enquiries" && (currentUser === "owner" || currentUser === "broker" || currentUser === "stay_provider" || currentUser === "vehicle_provider" || currentUser === "event_organizer" || currentUser === "sme") && (
+          <div>
+            <h2 className="text-2xl mb-6">📩 Enquiries</h2>
+            <div className="text-center py-16 text-muted-foreground">
+              <div className="text-5xl mb-3">📩</div>
+              <h3>No enquiries yet</h3>
+              <p className="mt-2">When customers enquire about your listings, they'll appear here.</p>
+              <p className="text-xs mt-4 bg-primary/10 rounded-lg p-3 inline-block">💡 Enquiries system syncs with your listings in real-time</p>
+            </div>
+          </div>
         )}
 
         {/* Rate Management - for owner/broker/admin */}
@@ -321,12 +321,7 @@ const DashboardPage = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl">My {currentUser === "stay_provider" ? "Stays" : currentUser === "vehicle_provider" ? "Vehicles" : currentUser === "event_organizer" ? "Events" : "Listings"}</h2>
               <button 
-                onClick={() => {
-                  if (currentUser === "stay_provider") setShowStayModal(true);
-                  else if (currentUser === "vehicle_provider") setShowVehicleModal(true);
-                  else if (currentUser === "event_organizer") setShowEventModal(true);
-                  else showToast("Opening listing form…", "info");
-                }} 
+                onClick={() => showToast("Feature coming soon - listing creation interface in development", "info")} 
                 className="bg-primary hover:bg-gold-light text-primary-foreground px-5 py-2.5 rounded-lg font-bold text-sm">
                 ➕ Add New
               </button>
@@ -714,11 +709,6 @@ const DashboardPage = () => {
       </div>
 
       <LankaPayModal open={showPayment} onClose={() => setShowPayment(false)} amount={paymentCtx.amount} description={paymentCtx.description} onSuccess={paymentCtx.onSuccess} />
-      
-      {/* Listing Modals */}
-      <ListStayModal open={showStayModal} onOpenChange={setShowStayModal} />
-      <ListVehicleModal open={showVehicleModal} onOpenChange={setShowVehicleModal} />
-      <ListEventModal open={showEventModal} onOpenChange={setShowEventModal} />
     </div>
   );
 };
