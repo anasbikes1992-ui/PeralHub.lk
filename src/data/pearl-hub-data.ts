@@ -36,6 +36,10 @@ export const INITIAL_DATA: AppData = {
     customer: { id: "U001", name: "Ashan Perera", email: "ashan@email.com", role: "customer", phone: "+94 77 123 4567", joined: "2024-01-01", bookings: 5, spent: 145000 },
     owner: { id: "U002", name: "Nimal Jayawardena", email: "nimal@email.com", role: "owner", phone: "+94 71 987 6543", joined: "2023-06-15", listings: 3, revenue: 850000, nic: "197845600123", verified: true },
     broker: { id: "U003", name: "Priya Silva & Associates", email: "priya@realty.lk", role: "broker", phone: "+94 11 234 5678", joined: "2023-03-01", listings: 38, revenue: 4200000, membership: "active", memberships_remaining: 27, verified: true },
+    stay_provider: { id: "U005", name: "Lakshman's Homestays", email: "stays@lk.com", role: "stay_provider", phone: "+94 77 555 6666", joined: "2023-09-20", listings: 12, revenue: 2850000, stb_registration: "STB/2023/456", verified: true },
+    vehicle_provider: { id: "U006", name: "Jayasiri Rentals", email: "vehicles@jayasiri.com", role: "vehicle_provider", phone: "+94 77 666 7777", joined: "2023-11-05", listings: 18, revenue: 3400000, license: "VR/2023/789", verified: true },
+    event_organizer: { id: "U007", name: "EventPro Lanka", email: "events@eventpro.lk", role: "event_organizer", phone: "+94 77 777 8888", joined: "2023-12-10", listings: 8, revenue: 1200000, permit: "EP/2024/123", verified: true },
+    sme: { id: "U008", name: "TechWorks Solutions", email: "info@techworks.lk", role: "sme", phone: "+94 77 888 9999", joined: "2024-01-15", listings: 5, revenue: 450000, business_reg: "BR/2024/456", verified: true },
     admin: { id: "U004", name: "Pearl Hub Admin", email: "admin@pearlhub.lk", role: "admin" },
   },
   transactions: [

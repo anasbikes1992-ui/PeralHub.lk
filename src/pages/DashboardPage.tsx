@@ -13,8 +13,8 @@ const DashboardPage = () => {
   const { user, profile } = useAuth();
   const [activeSection, setActiveSection] = useState("overview");
   const mockUser = data.users[currentUser];
-  const displayName = profile?.full_name || mockUser.name;
-  const displayEmail = profile?.email || mockUser.email;
+  const displayName = profile?.full_name || mockUser?.name || "User";
+  const displayEmail = profile?.email || mockUser?.email || "user@example.com";
 
   const roleColorMap: Record<string, string> = { customer: "bg-emerald", owner: "bg-sapphire", broker: "bg-primary", admin: "bg-ruby", stay_provider: "bg-teal", vehicle_provider: "bg-ruby", event_organizer: "bg-indigo", sme: "bg-primary" };
   const roleColor = roleColorMap[currentUser] || "bg-primary";
